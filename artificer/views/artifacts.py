@@ -41,7 +41,7 @@ invalid_file_err_msg = "Missing or invalid artifact yaml file"
 
 @view_config(route_name='artifacts', renderer='json')
 def artifacts_view(request):
-    artifact_json = {}
+    results = {'artifacts': []}
     label_filter = request.params.getall('labels')
     supported_os_filter = request.params.getall('supported_os')
     author_filter = request.params.getall('author')
@@ -62,69 +62,82 @@ def artifacts_view(request):
             artifacts = artifacts.filter(Artifact.sources.any(Source.type.in_(source_filter)))
 
         for artifact in artifacts:
-            artifact_json[artifact.name] = {
+            results['artifacts'].append({
+                'name': artifact.name,
                 'id': artifact.id,
                 'author': artifact.author.name,
                 'supported_os': [supported_os.name for supported_os in artifact.supported_os],
                 'labels': [label.name for label in artifact.labels],
-                'sources': [source.type for source in artifact.sources]}
+                'sources': [source.type for source in artifact.sources]
+            })
     except DBAPIError:
         return Response(db_err_msg, content_type='text/plain', status=500)
 
-    return artifact_json
+    return results
 
 
 @view_config(route_name='labels', renderer='json')
 def labels_view(request):
-    labels_json = {}
+    results = {'labels': []}
     try:
         labels = request.db_session.query(Label).all()
     except DBAPIError:
         return Response(db_err_msg, content_type='text/plain', status=500)
 
     for label in labels:
-        labels_json[label.name] = [{'id': artifact.id, 'name': artifact.name} for artifact in label.artifacts]
-    return labels_json
+        results['labels'].append({
+            'name': label.name,
+            'artifacts': [{'id': artifact.id, 'name': artifact.name} for artifact in label.artifacts]
+        })
+    return results
 
 
 @view_config(route_name='supported_os', renderer='json')
 def supported_os_view(request):
-    supported_os_json = {}
+    results = {'supported_os': []}
     try:
         supported_oss = request.db_session.query(SupportedOS).all()
     except DBAPIError:
         return Response(db_err_msg, content_type='text/plain', status=500)
 
     for supported_os in supported_oss:
-        supported_os_json[supported_os.name] = [{'id': artifact.id, 'name': artifact.name} for artifact in
-                                                supported_os.artifacts]
-    return supported_os_json
+        results['supported_os'].append({
+            'name': supported_os.name,
+            'artifacts': [{'id': artifact.id, 'name': artifact.name} for artifact in supported_os.artifacts]
+        })
+    return results
 
 
 @view_config(route_name='sources', renderer='json')
 def sources_view(request):
-    sources_json = {}
+    results = {'sources': []}
     try:
         sources = request.db_session.query(Source).all()
     except DBAPIError:
         return Response(db_err_msg, content_type='text/plain', status=500)
 
     for source in sources:
-        sources_json[source.type] = [{'id': artifact.id, 'name': artifact.name} for artifact in source.artifacts]
-    return sources_json
+        results['sources'].append({
+            'type': source.type,
+            'artifacts': [{'id': artifact.id, 'name': artifact.name} for artifact in source.artifacts]
+        })
+    return results
 
 
 @view_config(route_name='authors', renderer='json')
 def authors_view(request):
-    user_json = {}
+    results = {'authors': []}
     try:
         users = request.db_session.query(User).all()
     except DBAPIError:
         return Response(db_err_msg, content_type='text/plain', status=500)
 
     for user in users:
-        user_json[user.name] = [{'id': artifact.id, 'name': artifact.name} for artifact in user.artifacts]
-    return user_json
+        results['authors'].append({
+            'name': user.name,
+            'artifacts': [{'id': artifact.id, 'name': artifact.name} for artifact in user.artifacts]
+        })
+    return results
 
 
 @view_config(request_method='GET', route_name='artifact', renderer='json')
@@ -167,7 +180,7 @@ def artifact_update(request):
         return Response(num_artifact_err_msg, content_type='text/plain', status=500)
 
     try:
-        forensic_artifact = artifact_reader.ReadArtifactDefinition(artifact_definition)
+        forensic_artifact = artifact_reader.ReadArtifactDefinitionValues(artifact_definition)
     except fa_errors.FormatError:
         return Response(invalid_artifact_err_msg, content_type='text/plain', status=500)
 
@@ -202,7 +215,7 @@ def artifact_create(request):
         return Response(num_artifact_err_msg, content_type='text/plain', status=500)
 
     try:
-        forensic_artifact = artifact_reader.ReadArtifactDefinition(artifact_definition)
+        forensic_artifact = artifact_reader.ReadArtifactDefinitionValues(artifact_definition)
     except fa_errors.FormatError:
         return Response(invalid_artifact_err_msg, content_type='text/plain', status=500)
 
@@ -234,7 +247,7 @@ def artifact_export_view(request):
         artifacts = request.db_session.query(Artifact).filter(Artifact.id.in_(artifact_ids))
         for artifact in artifacts:
             artifact_definition = json.loads(artifact.data)
-            forensic_artifacts.append(artifact_reader.ReadArtifactDefinition(artifact_definition))
+            forensic_artifacts.append(artifact_reader.ReadArtifactDefinitionValues(artifact_definition))
     except DBAPIError:
         return Response(db_err_msg, content_type='text/plain', status=500)
 

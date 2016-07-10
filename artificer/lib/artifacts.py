@@ -9,7 +9,7 @@ import artifacts.definitions as fa_definitions
 import artifacts.source_type as fa_sources
 
 def get_artifact(db_session, forensic_artifact, author, replace=False):
-    artifact_definition = json.dumps(forensic_artifact.CopyToDict())
+    artifact_definition = json.dumps(forensic_artifact.AsDict())
 
     try:
         author = db_session.query(User).filter_by(name=author).one()
@@ -39,7 +39,7 @@ def get_artifact(db_session, forensic_artifact, author, replace=False):
 
 
 def update_artifact(db_session, artifact, forensic_artifact, author='admin'):
-    artifact_definition = json.dumps(forensic_artifact.CopyToDict())
+    artifact_definition = json.dumps(forensic_artifact.AsDict())
 
     try:
         author = db_session.query(User).filter_by(name=author).one()
@@ -91,7 +91,7 @@ def set_artifact_supported_os(db_session, artifact, supported_os):
 
 
 def init_sources(db_session):
-    for source_type in fa_sources.TYPE_INDICATORS:
+    for source_type in fa_sources.SourceTypeFactory.GetSourceTypeIndicators():
         get_source(db_session, source_type)
 
 

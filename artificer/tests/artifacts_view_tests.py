@@ -36,67 +36,74 @@ class TestArtifactsView(BaseTest):
 
     def test_list_all_artifacts(self):
         test_request = dummy_request(self.db_session)
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 3)
-        self.assertEqual(artifacts['TestArtifact1']['author'], 'admin')
-        self.assertCountEqual(artifacts['TestArtifact1']['supported_os'], ['Windows', 'Linux'])
-        self.assertCountEqual(artifacts['TestArtifact1']['labels'], ['Software'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 3)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact1', 'TestArtifact2', 'TestArtifact3'])
+
 
     def test_list_labeled_artifacts(self):
         test_request = dummy_request(self.db_session)
         test_request.params.add('labels', 'Software')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 2)
-        self.assertCountEqual(artifacts.keys(), ['TestArtifact1', 'TestArtifact3'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 2)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact1', 'TestArtifact3'])
 
     def test_list_supported_os_artifacts(self):
         test_request = dummy_request(self.db_session)
         test_request.params.add('supported_os', 'Windows')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 1)
-        self.assertCountEqual(artifacts.keys(), ['TestArtifact1'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 1)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact1'])
 
     def test_list_author_artifacts(self):
         test_request = dummy_request(self.db_session)
         test_request.params.add('author', 'user')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 1)
-        self.assertCountEqual(artifacts.keys(), ['TestArtifact3'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 1)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact3'])
 
     def test_list_source_artifacts(self):
         test_request = dummy_request(self.db_session)
         test_request.params.add('sources', 'REGISTRY_KEY')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 1)
-        self.assertCountEqual(artifacts.keys(), ['TestArtifact3'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 1)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact3'])
 
     def test_multifilter_artifacts(self):
         test_request = dummy_request(self.db_session)
         test_request.params.add('author', 'admin')
         test_request.params.add('labels', 'Software')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 1)
-        self.assertCountEqual(artifacts.keys(), ['TestArtifact1'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 1)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact1'])
 
         test_request = dummy_request(self.db_session)
         test_request.params.add('author', 'user')
         test_request.params.add('labels', 'Configuration Files')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 0)
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 0)
 
         test_request = dummy_request(self.db_session)
         test_request.params.add('supported_os', 'Darwin')
         test_request.params.add('labels', 'Software')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 1)
-        self.assertCountEqual(artifacts.keys(), ['TestArtifact3'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 1)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact3'])
 
         test_request = dummy_request(self.db_session)
         test_request.params.add('author', 'user')
         test_request.params.add('author', 'admin')
-        artifacts = artifact_views.artifacts_view(test_request)
-        self.assertEqual(len(artifacts), 3)
-        self.assertCountEqual(artifacts.keys(), ['TestArtifact1', 'TestArtifact2', 'TestArtifact3'])
+        results = artifact_views.artifacts_view(test_request)
+        self.assertEqual(len(results['artifacts']), 3)
+        artifact_names = [artifact['name'] for artifact in results['artifacts']]
+        self.assertCountEqual(artifact_names, ['TestArtifact1', 'TestArtifact2', 'TestArtifact3'])
 
 
 class TestLabelsView(BaseTest):
@@ -106,10 +113,13 @@ class TestLabelsView(BaseTest):
         self.init_database()
 
     def test_list_all_labels(self):
-        labels = artifact_views.labels_view(dummy_request(self.db_session))
-        self.assertEqual(len(labels), len(fa_definitions.LABELS))
-        self.assertEqual(len(labels['Configuration Files']), 1)
-        self.assertEqual(len(labels['Software']), 2)
+        results = artifact_views.labels_view(dummy_request(self.db_session))
+        self.assertEqual(len(results['labels']), len(fa_definitions.LABELS))
+        for label in results['labels']:
+            if label['name'] == 'Configuration Files':
+                self.assertEqual(len(label['artifacts']), 1)
+            if label['name'] == 'Software':
+                self.assertEqual(len(label['artifacts']), 2)
 
 
 class TestSupportedOSView(BaseTest):
@@ -119,11 +129,15 @@ class TestSupportedOSView(BaseTest):
         self.init_database()
 
     def test_list_all_supported_os(self):
-        supported_os = artifact_views.supported_os_view(dummy_request(self.db_session))
-        self.assertEqual(len(supported_os), 3)
-        self.assertEqual(len(supported_os['Linux']), 3)
-        self.assertEqual(len(supported_os['Darwin']), 2)
-        self.assertEqual(len(supported_os['Windows']), 1)
+        results = artifact_views.supported_os_view(dummy_request(self.db_session))
+        self.assertEqual(len(results['supported_os']), 3)
+        for supported_os in results['supported_os']:
+            if supported_os['name'] == 'Linux':
+                self.assertEqual(len(supported_os['artifacts']), 3)
+            if supported_os['name'] == 'Darwin':
+                self.assertEqual(len(supported_os['artifacts']), 2)
+            if supported_os['name'] == 'Windows':
+                self.assertEqual(len(supported_os['artifacts']), 1)
 
 
 class TestSourcesView(BaseTest):
@@ -133,10 +147,13 @@ class TestSourcesView(BaseTest):
         self.init_database()
 
     def test_list_all_sources(self):
-        sources = artifact_views.sources_view(dummy_request(self.db_session))
-        self.assertEqual(len(sources), len(fa_sources.TYPE_INDICATORS))
-        self.assertEqual(len(sources['FILE']), 2)
-        self.assertEqual(len(sources['REGISTRY_KEY']), 1)
+        results = artifact_views.sources_view(dummy_request(self.db_session))
+        self.assertEqual(len(results['sources']), len(fa_sources.SourceTypeFactory.GetSourceTypeIndicators()))
+        for source in results['sources']:
+            if source['type'] == 'FILE':
+                self.assertEqual(len(source['artifacts']), 2)
+            if source['type'] == 'REGISTRY_KEY':
+                self.assertEqual(len(source['artifacts']), 1)
 
 
 class TestAuthorsView(BaseTest):
@@ -146,10 +163,13 @@ class TestAuthorsView(BaseTest):
         self.init_database()
 
     def test_list_all_sources(self):
-        authors = artifact_views.authors_view(dummy_request(self.db_session))
-        self.assertEqual(len(authors), 2)
-        self.assertEqual(len(authors['admin']), 2)
-        self.assertEqual(len(authors['user']), 1)
+        results = artifact_views.authors_view(dummy_request(self.db_session))
+        self.assertEqual(len(results['authors']), 2)
+        for author in results['authors']:
+            if author['name'] == 'admin':
+                self.assertEqual(len(author['artifacts']), 2)
+            if author['name'] == 'user':
+                self.assertEqual(len(author['artifacts']), 1)
 
 
 class TestArtifactView(BaseTest):

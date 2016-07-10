@@ -8,3 +8,4 @@
 /dist
 .eggs/
 .cache
+artificer/static/app/bower_components

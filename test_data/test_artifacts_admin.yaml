@@ -14,6 +14,7 @@ sources:
     - 'Test'
     - 'Test'
   supported_os: [Windows]
+supported_os: [Windows,Linux]
 labels: [Software]
 urls: ['https://www.github.com/']
 ---
@@ -33,5 +34,6 @@ sources:
     - 'Test'
     - 'Test'
   supported_os: [Darwin]
+supported_os: [Darwin, Linux]
 labels: [Configuration Files]
 urls: ['https://www.github.com/']
