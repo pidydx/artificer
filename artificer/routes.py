@@ -1,0 +1,11 @@
+def includeme(config):
+    config.add_static_view('static', 'static', cache_max_age=3600)
+    config.add_route('index', '/')
+    config.add_route('artifacts', 'api/artifacts')
+    config.add_route('artifact', 'api/artifacts/{id}')
+    config.add_route('labels', 'api/labels')
+    config.add_route('authors', 'api/authors')
+    config.add_route('supported_os', 'api/supported_os')
+    config.add_route('sources', 'api/sources')
+    config.add_route('export_artifacts', 'api/export')
+    config.add_route('import_artifacts', 'api/import')

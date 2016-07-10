@@ -1,0 +1,11 @@
+name: TestArtifact5
+doc: |
+  This artifact is for testing
+sources:
+- type: REGISTRY_KEY
+  attributes:
+    keys:
+    - 'HKEY_LOCAL_MACHINE\TEST'
+supported_os: [Darwin]
+labels: [Software]
+urls: ['https://www.github.com/']

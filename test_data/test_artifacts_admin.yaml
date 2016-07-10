@@ -1,0 +1,37 @@
+name: TestArtifact1
+doc: |
+  This artifact is for testing
+sources:
+- type: FILE
+  attributes:
+    paths:
+    - 'Test'
+    - 'Test'
+  supported_os: [Linux]
+- type: FILE
+  attributes:
+    paths:
+    - 'Test'
+    - 'Test'
+  supported_os: [Windows]
+labels: [Software]
+urls: ['https://www.github.com/']
+---
+name: TestArtifact2
+doc: |
+  This artifact is for testing
+sources:
+- type: FILE
+  attributes:
+    paths:
+    - 'Test'
+    - 'Test'
+  supported_os: [Linux]
+- type: FILE
+  attributes:
+    paths:
+    - 'Test'
+    - 'Test'
+  supported_os: [Darwin]
+labels: [Configuration Files]
+urls: ['https://www.github.com/']
